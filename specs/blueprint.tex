@@ -1,0 +1,123 @@
+\documentclass[]{article}
+\usepackage{multicol}
+\usepackage{listings}
+%opening
+\title{MarsOS/Ship - Blueprint File and Package Specification}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent This document describes the specification for the configuration files used for 'ship', the package manager of MarsOS and how the packages are build
+\end{abstract}
+\vspace{25px}
+\begin{multicols}{2}
+	\section{Introduction}
+	Blueprint files are, as their name suggests, a manual
+	for the package manager. They describe how a package
+	should be build and also define some meta-data which
+	cannot be determined otherwise.\\
+	An example of this meta-data could be the packager name
+	or the license of the package. Other meta-data, like the size, is generated automatically by the package
+	manager during the build of a package.\\
+	A Blueprint file is encoded in JSON.
+	\section{Blueprint File}
+	All blueprint files must have the name 'blueprint.json'.
+	This is required, so that the package manager can
+	locate them automatically if it is in the source
+	directionary. If you are not in the source, you can
+	pass the path to the blueprint to the package manager
+	to build the package (and download the sources to
+	a temp folder).
+	\section{Build Environment}
+	The package manager must expose curtain variables
+	during the build, to allow a blueprint file to be
+	written in a portable way.
+	You should never use an absolute path in a blueprint,
+	because it will may break the build under curtain
+	conditions. To avoid this, you should use one of
+	the environment variables below (Shell-Syntax):
+	
+	\begin{tabular}{|p{0.3\linewidth}|p{0.45\linewidth}|}
+		\hline
+		Variable & Description \\\hline
+		\$srcdir & Path to your source files (with trailing slash) \\\hline
+		\$builddir & install your files here, treat it like root (/) \\\hline
+		\$arch & The architecture on which the package is build, for example x86\_64 \\\hline
+	\end{tabular}
+	\pagebreak
+	\section{Blueprint Object}
+	As stated above, a blueprint is encoded in JSON. This section will document all available  and required fileds in a blueprint file.
+
+	\subsection{Required Entries}
+
+		\subsubsection{name}
+		The name of the package. Should only contain (lowercase) letters, numbers and hyphens(-).
+		\subsubsection{url}
+		Homepage of the package, can also be an URL of
+		the source repository.
+		\subsubsection{getVersion}
+		A shell command that will output the version
+		of the current sources.
+		\subsubsection{source}
+		Where to download the sources. This is an actual object and needs to contain at least the 'latest' child, mapped to an URL to download the latest version but could also hold multiple versions like '1.0.2'
+		\subsubsection{config}
+		An array of commands to execute before the build process. \\(e.g. ./configure))
+		\subsection{build}
+		An array of commands used to build the code.
+		(e.g. make)
+		\subsubsection{package}
+		An array of commands used to package your code, normally this will be something like:\\'make install DESTDIR=\$pkgdir'
+		\subsubsection{maintainer}
+		An object with to child properties, name and email. It should contain information about the person who created the blueprint and should be contacted if there is an error.
+		\subsubsection{license}
+		The license of the package, can be anything from the following list:
+		\begin{itemize}
+			\item MIT
+			\item (L)GPLv3
+			\item (L)GPLv2
+			\item Apache
+			\item BSD (3-Clause)
+			\item CC0 (public domain)
+		\end{itemize}
+		
+	\subsection{Optional Entries}
+		\subsubsection{bugtracker}
+		Where to report bugs, normally an URL or for small projects an email.
+		\subsubsection{invalidArches}
+		An array of architectures on which the package can not be build. You should really avoid this, but sometimes it is not possible to do so.
+
+	\pagebreak
+
+\end{multicols}
+
+\section{Example File}
+The following file is taken from the package manager itself, so yes, it can package itself.
+\begin{lstlisting}
+{
+	"name": "ship",
+	"license": "MIT",
+	"url": "https://github.com/MarsOS/ship",
+	"bugtracker": "https://github.com/MarsOS/ship/issues",
+	"getVersion": "make version",
+	"source": {
+	"latest": "https://github.com/MarsOS/ship/archive/master.tar.gz"
+	},
+	"config": [
+	
+	],
+	"build": [
+		"make"
+	],
+	"package": [
+		"make install DESTDIR=$pkgdir"
+	],
+	"maintainer": {
+		"name": "Marius Messerschmidt",
+		"email": "marius.messerschmidt@googlemail.com"
+	}
+}
+\end{lstlisting}
+
+\end{document}
